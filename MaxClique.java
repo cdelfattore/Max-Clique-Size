@@ -10,10 +10,42 @@ import java.util.regex.*;
 
 public class MaxClique {
 	public static Map<Integer,Point> points; //map of points
+	public static Map<Integer,List<Integer>> edgeMap;
 
 	public static void main(String[] args) throws IOException {
 		//edges in the undirected graph
-		List<String> graphEdgesList = Arrays.asList("1-2","1-3","1-5","1-6","2-3","2-4","2-6","3-4","3-5","3-6","5-6");
+		List<String> graphEdgesList = Arrays.asList("1-2","1-3","1-5","2-3","2-4","2-6","3-4","3-5","3-6","5-6","6-1");
+
+		//Store the edges in a map to represent all of the edges of a node
+		edgeMap = new HashMap<Integer,List<Integer>>();
+		for(String s : graphEdgesList){
+			//System.out.println(s);
+			String[] edge = s.split("-");
+			Integer pointA = Integer.valueOf(edge[0]);
+			Integer pointB = Integer.valueOf(edge[1]);
+			// System.out.println("PointA: " + pointA);
+			// System.out.println("PointB: " + pointB);
+			if(edgeMap.keySet().contains(pointA)){
+				edgeMap.get(pointA).add(pointB);
+			}
+			else {
+				List<Integer> tmp = new ArrayList<Integer>();
+				tmp.add(pointB);
+				edgeMap.put(pointA,tmp);
+			}
+			if(edgeMap.keySet().contains(pointB)){
+				edgeMap.get(pointB).add(pointA);
+			}
+			else {
+				List<Integer> tmp = new ArrayList<Integer>();
+				tmp.add(pointA);
+				edgeMap.put(pointB,tmp);
+			}
+		}
+
+		for(Integer i : edgeMap.keySet()){
+			System.out.println(i + " " + edgeMap.get(i));
+		}
 
 		/*for(String s : graphEdgesList){
 			System.out.println(s);
@@ -55,9 +87,33 @@ public class MaxClique {
 
 		//More concerned with the edges
 		//Create a gentic algoritm to generate random sets of edges, which is basically a subgraph
-		//Calculate the intersecting nodes
 		
+		//need to retrieve a random amount of edges
+		//int max = points.size(); //normally will be this 
+		int max = 6; //use this for initally testing
+		int min = 2;
+		int numPoints = randomNum(min,max);
+		System.out.println("Number of points: " + numPoints);
+		Integer[] randPoints = new Integer[numPoints];
+		//grab numEdges amount of points from points
+		for(int i = 0; i < numPoints; i++){
+			randPoints[i] = randomNum(min,max);
+			System.out.println(randPoints[i]);
+		}
+		System.out.println();
+		System.out.println("Set of points");
+		//convert the array to a set to remove duplicat values
+		Set<Integer> mySet = new HashSet<Integer>(Arrays.asList(randPoints));
+		for(Integer i : mySet){
+			System.out.println(i);
+		}
 
+		//create the random subgraph
+
+	}
+
+	static int randomNum(int min, int max){
+		return min + (int)(Math.random() * ((max - min) + 1));
 	}
 }
 
@@ -86,7 +142,7 @@ class Point {
 class SubGraph {
 	ArrayList<String> edges;
 
-	SubGraph(ArrayList ranEdges){
+	SubGraph(ArrayList<String> ranEdges){
 		edges = new ArrayList<String>(ranEdges);
 	}
 
