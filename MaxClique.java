@@ -98,7 +98,7 @@ public class MaxClique {
 		//grab numEdges amount of points from points
 		for(int i = 0; i < numPoints; i++){
 			randPoints[i] = randomNum(min,max);
-			System.out.println(randPoints[i]);
+			//System.out.println(randPoints[i]);
 		}
 		System.out.println();
 		System.out.println("Set of points");
@@ -107,13 +107,38 @@ public class MaxClique {
 		for(Integer i : mySet){
 			System.out.println(i);
 		}
+		System.out.println();
 
 		//create the random subgraph
+		SubGraph initSubGraph = new SubGraph(mySet);
+		System.out.println(initSubGraph.points);
+		System.out.println(initSubGraph.maxCliqueSize);
+		System.out.println(initSubGraph.maxCliqueSize);
+		System.out.println(initSubGraph.maxCliqueArray);
 
 	}
 
 	static int randomNum(int min, int max){
 		return min + (int)(Math.random() * ((max - min) + 1));
+	}
+
+	public static ArrayList<Integer> intersection(Integer a, Integer b){
+		ArrayList<Integer> inter = new ArrayList<Integer>();
+		System.out.println("a " + a);
+		System.out.println("b " + b);
+		//inter.add(a);
+		//inter.add(b);
+		for(Integer j : edgeMap.get(a)){
+			if(j != a && j != b){
+				for(Integer h : edgeMap.get(b)){
+					if(j == h){
+						System.out.println("Is " + j + " = " + h);
+						inter.add(j);
+					}
+				}
+			}
+		}
+		return inter;
 	}
 }
 
@@ -140,15 +165,70 @@ class Point {
 //Create a object that will store the random edges
 //This object will calculate the clique of the subGraph
 class SubGraph {
-	ArrayList<String> edges;
+	ArrayList<Integer> points;
+	int maxCliqueSize;
+	ArrayList<Integer> maxCliqueArray;
 
-	SubGraph(ArrayList<String> ranEdges){
-		edges = new ArrayList<String>(ranEdges);
+	SubGraph(ArrayList<Integer> ranEdges){
+		points = new ArrayList<Integer>();
+		for(Integer i : ranEdges){
+			points.add(i);
+		}
+	}
+
+	SubGraph(Set<Integer> ranEdges){
+		points = new ArrayList<Integer>();
+
+		for(Integer i : ranEdges){
+			points.add(i);
+		}
+		CalcMaxClique();	
 	}
 
 	//function to calculate the maximum clique of a subgraph
 	void CalcMaxClique(){
+		maxCliqueArray = new ArrayList<Integer>();
 
+		if(points.size() == 1){
+			maxCliqueArray.addAll(points);
+			maxCliqueSize = 1;
+		}
+		else if(points.size() == 2){
+			//check if there is a edge between them
+			if( MaxClique.edgeMap.get( points.get(0) ).contains( points.get(1) ) ){
+				maxCliqueArray.addAll(points);
+				maxCliqueSize = 2;
+			}				
+		}
+		else {
+			maxCliqueSize = 0;
+			ArrayList<Integer> tmpMaxArray = new ArrayList<Integer>();
+			for(int i = 0; i < points.size(); i++){
+				//start with the first two nodes
+				if(i+1 < points.size()){
+					/*Integer a = points.get(i);
+					Integer b = points.get(i+1);
+					System.out.println("A: " + a + " B: " + b);
+					//find the intersection of the nodes in List A and B
+					//now find a node that connects them both
+					ArrayList<Integer> temp = MaxClique.intersection(a,b);
+					if(temp.size() > maxCliqueSize){
+						//maxCliqueSize = temp.size();
+						tmpMaxArray = temp;
+					}*/
+
+					MaxClique.intersection(points.get(i),points.get(i+1));
+				}
+			}
+			//Remove nodes that aren't in the points of the subgraph
+			for(Integer j : tmpMaxArray){
+				if(points.contains(j)){
+					maxCliqueArray.add(j);
+				}
+			}
+			System.out.println(maxCliqueArray);
+			maxCliqueSize = maxCliqueArray.size();
+		}
 	}
 
 	/*void addEdge(String edge){
