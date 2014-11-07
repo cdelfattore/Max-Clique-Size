@@ -10,14 +10,14 @@ import java.util.regex.*;
 
 public class MaxClique {
 	public static Map<Integer,Point> points; //map of points
-	public static Map<Integer,List<Integer>> edgeMap;
+	public static Map<Integer,ArrayList<Integer>> edgeMap;
 
 	public static void main(String[] args) throws IOException {
 		//edges in the undirected graph
-		List<String> graphEdgesList = Arrays.asList("1-2","1-3","1-5","2-3","2-4","2-6","3-4","3-5","3-6","5-6","6-1");
+		List<String> graphEdgesList = Arrays.asList("1-2","1-3","1-5","2-3","2-4","2-6","3-4","3-5","3-6","4-5","5-6","1-6");
 
 		//Store the edges in a map to represent all of the edges of a node
-		edgeMap = new HashMap<Integer,List<Integer>>();
+		edgeMap = new HashMap<Integer,ArrayList<Integer>>();
 		for(String s : graphEdgesList){
 			//System.out.println(s);
 			String[] edge = s.split("-");
@@ -29,7 +29,7 @@ public class MaxClique {
 				edgeMap.get(pointA).add(pointB);
 			}
 			else {
-				List<Integer> tmp = new ArrayList<Integer>();
+				ArrayList<Integer> tmp = new ArrayList<Integer>();
 				tmp.add(pointB);
 				edgeMap.put(pointA,tmp);
 			}
@@ -37,7 +37,7 @@ public class MaxClique {
 				edgeMap.get(pointB).add(pointA);
 			}
 			else {
-				List<Integer> tmp = new ArrayList<Integer>();
+				ArrayList<Integer> tmp = new ArrayList<Integer>();
 				tmp.add(pointA);
 				edgeMap.put(pointB,tmp);
 			}
@@ -114,9 +114,10 @@ public class MaxClique {
 		// System.out.println(initSubGraph.points);
 		// System.out.println(initSubGraph.maxCliqueSize);
 		// System.out.println(initSubGraph.maxCliqueSize);
-		System.out.println(initSubGraph.maxCliqueArray);
+		//System.out.println(initSubGraph.maxCliqueArray);
 
-		// intersection(4,2);
+		
+		//intersection(edgeMap.get(2),edgeMap.get(3));
 		// intersection(1,3);
 
 	}
@@ -159,6 +160,46 @@ public class MaxClique {
 			}
 		}
 		return inter;
+	}
+
+	//intersection between a list and a list
+	public static ArrayList<Integer> intersection(ArrayList<Integer> aList, ArrayList<Integer> bList){
+		ArrayList<Integer> inter = new ArrayList<Integer>();
+		//System.out.println("aList " + aList);
+		//System.out.println("bList " + bList);
+		for(Integer j : aList){
+			for(Integer k : bList){
+				//System.out.println(j + " " + k);
+				if(j == k){
+					inter.add(k);
+					//System.out.println(inter);
+				}
+				else {
+					//inter.remove(k);
+				}
+			}
+		}
+		//System.out.println("inter " + inter);
+		return inter;
+	}
+
+	public static ArrayList<Integer> bronKerbosch(ArrayList<Integer> r, ArrayList<Integer> p, ArrayList<Integer> x){
+		//System.out.println(p);
+		if(p.size() == 0 && x.size() == 0){
+			System.out.println(r);
+			
+		}
+		else {
+			for(Integer i : p){
+				r.add(i);
+				p = intersection(p,edgeMap.get(i));
+				bronKerbosch(r, p, x);
+				p.clear();
+				p.add(i);
+				x.add(i);
+			}	
+		}
+		return r;
 	}
 
 }
@@ -212,31 +253,23 @@ class SubGraph {
 
 		if(points.size() == 1){
 			maxCliqueArray.addAll(points);
-			maxCliqueSize = 1;
+
 		}
 		else if(points.size() == 2){
 			//check if there is a edge between them
 			if( MaxClique.edgeMap.get( points.get(0) ).contains( points.get(1) ) ){
 				maxCliqueArray.addAll(points);
-				maxCliqueSize = 2;
+
 			}				
 		}
 		else {
-			maxCliqueSize = 0;
 			ArrayList<Integer> tmpMaxArray = new ArrayList<Integer>();
-			//start off with the intersection of the first two points
-			tmpMaxArray = MaxClique.intersection(points.get(0),points.get(1));
-			for(int i = 0; i < points.size(); i++){
-				//start with the first two nodes
-				Integer a = points.get(i);
-				System.out.println("A: " + a);
-				tmpMaxArray = MaxClique.intersection(points.get(i),tmpMaxArray);
-				maxCliqueArray.addAll(tmpMaxArray);
-				// search(a, tmpMaxArray);
-				// System.out.println("End " + tmpMaxArray);
-
-			}
-			//maxCliqueArray.addAll()
+			ArrayList<Integer> a = new ArrayList<Integer>();
+			ArrayList<Integer> b = new ArrayList<Integer>();
+			MaxClique.bronKerbosch(a, points, b );
+			/*for(int i = 0; i < points.size(); i++){
+								
+			}*/
 		}
 	}
 
