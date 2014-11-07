@@ -111,10 +111,13 @@ public class MaxClique {
 
 		//create the random subgraph
 		SubGraph initSubGraph = new SubGraph(mySet);
-		System.out.println(initSubGraph.points);
-		System.out.println(initSubGraph.maxCliqueSize);
-		System.out.println(initSubGraph.maxCliqueSize);
+		// System.out.println(initSubGraph.points);
+		// System.out.println(initSubGraph.maxCliqueSize);
+		// System.out.println(initSubGraph.maxCliqueSize);
 		System.out.println(initSubGraph.maxCliqueArray);
+
+		// intersection(4,2);
+		// intersection(1,3);
 
 	}
 
@@ -122,6 +125,7 @@ public class MaxClique {
 		return min + (int)(Math.random() * ((max - min) + 1));
 	}
 
+	//This is a correction function for finding the intersection
 	public static ArrayList<Integer> intersection(Integer a, Integer b){
 		ArrayList<Integer> inter = new ArrayList<Integer>();
 		System.out.println("a " + a);
@@ -140,6 +144,23 @@ public class MaxClique {
 		}
 		return inter;
 	}
+
+	//intersection between a node and a list
+	public static ArrayList<Integer> intersection(Integer node, ArrayList<Integer> aList){
+		ArrayList<Integer> inter = new ArrayList<Integer>();
+		System.out.println("node " + node);
+		System.out.println("aList " + aList);
+		for(Integer j : aList){
+			if(MaxClique.edgeMap.get(node).contains(j) || j == node){
+				inter.add(j);
+			}
+			else {
+				inter.remove(j);
+			}
+		}
+		return inter;
+	}
+
 }
 
 //Object used to represent a single point
@@ -203,31 +224,31 @@ class SubGraph {
 		else {
 			maxCliqueSize = 0;
 			ArrayList<Integer> tmpMaxArray = new ArrayList<Integer>();
+			//start off with the intersection of the first two points
+			tmpMaxArray = MaxClique.intersection(points.get(0),points.get(1));
 			for(int i = 0; i < points.size(); i++){
 				//start with the first two nodes
-				if(i+1 < points.size()){
-					/*Integer a = points.get(i);
-					Integer b = points.get(i+1);
-					System.out.println("A: " + a + " B: " + b);
-					//find the intersection of the nodes in List A and B
-					//now find a node that connects them both
-					ArrayList<Integer> temp = MaxClique.intersection(a,b);
-					if(temp.size() > maxCliqueSize){
-						//maxCliqueSize = temp.size();
-						tmpMaxArray = temp;
-					}*/
+				Integer a = points.get(i);
+				System.out.println("A: " + a);
+				tmpMaxArray = MaxClique.intersection(points.get(i),tmpMaxArray);
+				maxCliqueArray.addAll(tmpMaxArray);
+				// search(a, tmpMaxArray);
+				// System.out.println("End " + tmpMaxArray);
 
-					MaxClique.intersection(points.get(i),points.get(i+1));
-				}
 			}
-			//Remove nodes that aren't in the points of the subgraph
-			for(Integer j : tmpMaxArray){
-				if(points.contains(j)){
-					maxCliqueArray.add(j);
-				}
+			//maxCliqueArray.addAll()
+		}
+	}
+
+
+	void search(Integer node, ArrayList<Integer> tmpMaxArray){
+		tmpMaxArray.add(node);
+		for(Integer i : MaxClique.edgeMap.get(node)){
+			//System.out.println(i);
+			if(!tmpMaxArray.contains(i)){
+				search(i, tmpMaxArray);
+				System.out.println("225 " + tmpMaxArray);
 			}
-			System.out.println(maxCliqueArray);
-			maxCliqueSize = maxCliqueArray.size();
 		}
 	}
 
