@@ -14,7 +14,9 @@ public class MaxClique {
 
 	public static void main(String[] args) throws IOException {
 		//edges in the undirected graph
-		List<String> graphEdgesList = Arrays.asList("1-2","1-3","1-5","2-3","2-4","2-6","3-4","3-5","3-6","4-5","5-6","1-6");
+		//List<String> graphEdgesList = Arrays.asList("1-2","1-3","1-5","2-3","2-4","2-6","3-4","3-5","3-6","4-5","5-6","1-6");
+		List<String> graphEdgesList = Arrays.asList("1-2","1-5","2-3","2-5","3-4","4-5","4-6");
+		//List<String> graphEdgesList = Arrays.asList("1-2","2-3","2-5","3-4","3-6","4-5","4-6","5-6");
 
 		//Store the edges in a map to represent all of the edges of a node
 		edgeMap = new HashMap<Integer,ArrayList<Integer>>();
@@ -109,8 +111,9 @@ public class MaxClique {
 		}
 		System.out.println();
 
+		SubGraph initSubGraph = new SubGraph(points.keySet());
 		//create the random subgraph
-		SubGraph initSubGraph = new SubGraph(mySet);
+		//SubGraph initSubGraph = new SubGraph(mySet);
 		// System.out.println(initSubGraph.points);
 		// System.out.println(initSubGraph.maxCliqueSize);
 		// System.out.println(initSubGraph.maxCliqueSize);
@@ -129,8 +132,8 @@ public class MaxClique {
 	//This is a correction function for finding the intersection
 	public static ArrayList<Integer> intersection(Integer a, Integer b){
 		ArrayList<Integer> inter = new ArrayList<Integer>();
-		System.out.println("a " + a);
-		System.out.println("b " + b);
+		// System.out.println("a " + a);
+		// System.out.println("b " + b);
 		//inter.add(a);
 		//inter.add(b);
 		for(Integer j : edgeMap.get(a)){
@@ -149,8 +152,8 @@ public class MaxClique {
 	//intersection between a node and a list
 	public static ArrayList<Integer> intersection(Integer node, ArrayList<Integer> aList){
 		ArrayList<Integer> inter = new ArrayList<Integer>();
-		System.out.println("node " + node);
-		System.out.println("aList " + aList);
+		// System.out.println("node " + node);
+		// System.out.println("aList " + aList);
 		for(Integer j : aList){
 			if(MaxClique.edgeMap.get(node).contains(j) || j == node){
 				inter.add(j);
@@ -165,8 +168,8 @@ public class MaxClique {
 	//intersection between a list and a list
 	public static ArrayList<Integer> intersection(ArrayList<Integer> aList, ArrayList<Integer> bList){
 		ArrayList<Integer> inter = new ArrayList<Integer>();
-		//System.out.println("aList " + aList);
-		//System.out.println("bList " + bList);
+		// System.out.println("aList " + aList);
+		// System.out.println("bList " + bList);
 		for(Integer j : aList){
 			for(Integer k : bList){
 				//System.out.println(j + " " + k);
@@ -183,20 +186,54 @@ public class MaxClique {
 		return inter;
 	}
 
+	public static ArrayList<Integer> union(ArrayList<Integer> a, Integer b){
+		ArrayList<Integer> union = new ArrayList<Integer>();
+		union.add(b);
+		for(Integer i : a){
+			if(b != i){
+				union.add(i);
+			}
+		}
+		return union;
+
+	}
+
+	public static ArrayList<Integer> setDifference(ArrayList<Integer> a, Integer b){
+		ArrayList<Integer> diffArray = new ArrayList<Integer>();
+		for(Integer i : a){
+			if(b != i){
+				diffArray.add(i);
+			}
+		}
+		return diffArray;
+	}
+
 	public static ArrayList<Integer> bronKerbosch(ArrayList<Integer> r, ArrayList<Integer> p, ArrayList<Integer> x){
-		//System.out.println(p);
+		/*System.out.println("r " + r);
+		System.out.println("p " + p);
+		System.out.println("x " + x);*/
+		
 		if(p.size() == 0 && x.size() == 0){
-			System.out.println(r);
-			
+			System.out.println("return " + r);
+			ArrayList<Integer> rFound = new ArrayList<Integer>();
+			rFound.addAll(r);
+			r.clear();
+			return rFound;
 		}
 		else {
-			for(Integer i : p){
-				r.add(i);
-				p = intersection(p,edgeMap.get(i));
-				bronKerbosch(r, p, x);
-				p.clear();
-				p.add(i);
-				x.add(i);
+			for(Integer v : p){
+				//r.add(v);
+				// p = intersection(p,edgeMap.get(v));
+				// x = intersection(x,edgeMap.get(v));
+				//System.out.println(r);
+				
+				bronKerbosch(union(r,v), intersection(p,edgeMap.get(v)), intersection(x,edgeMap.get(v)));
+				//p.clear();
+				//x.clear();
+				/*p = new ArrayList<Integer>();
+				x = new ArrayList<Integer>();*/
+				p = setDifference(p,v);
+				x = union(x,v);
 			}	
 		}
 		return r;
@@ -266,7 +303,7 @@ class SubGraph {
 			ArrayList<Integer> tmpMaxArray = new ArrayList<Integer>();
 			ArrayList<Integer> a = new ArrayList<Integer>();
 			ArrayList<Integer> b = new ArrayList<Integer>();
-			MaxClique.bronKerbosch(a, points, b );
+			maxCliqueArray = MaxClique.bronKerbosch(a, points, b );
 			/*for(int i = 0; i < points.size(); i++){
 								
 			}*/
