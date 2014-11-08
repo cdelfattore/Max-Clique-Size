@@ -9,91 +9,49 @@ import java.util.*;
 import java.util.regex.*;
 
 public class MaxClique {
-	public static Map<Integer,Point> points; //map of points
-	public static Map<Integer,ArrayList<Integer>> edgeMap;
+	//public static Map<Integer,Point> points; //map of points
+	public static ArrayList<Integer> points; //map of points
+	public static HashMap<Integer,ArrayList<Integer>> edgeMap;
 
 	public static void main(String[] args) throws IOException {
 		//edges in the undirected graph
-		//List<String> graphEdgesList = Arrays.asList("1-2","1-3","1-5","2-3","2-4","2-6","3-4","3-5","3-6","4-5","5-6","1-6");
-		List<String> graphEdgesList = Arrays.asList("1-2","1-5","2-3","2-5","3-4","4-5","4-6");
+		List<String> graphEdgesList = Arrays.asList("1-2","1-3","1-5","2-3","2-4","2-6","3-4","3-5","3-6","4-5","5-6","1-6","7-8","9-10");
+		//List<String> graphEdgesList = Arrays.asList("1-2","1-5","2-3","2-5","3-4","4-5","4-6");
 		//List<String> graphEdgesList = Arrays.asList("1-2","2-3","2-5","3-4","3-6","4-5","4-6","5-6");
-
-		//Store the edges in a map to represent all of the edges of a node
-		edgeMap = new HashMap<Integer,ArrayList<Integer>>();
-		for(String s : graphEdgesList){
-			//System.out.println(s);
-			String[] edge = s.split("-");
-			Integer pointA = Integer.valueOf(edge[0]);
-			Integer pointB = Integer.valueOf(edge[1]);
-			// System.out.println("PointA: " + pointA);
-			// System.out.println("PointB: " + pointB);
-			if(edgeMap.keySet().contains(pointA)){
-				edgeMap.get(pointA).add(pointB);
-			}
-			else {
-				ArrayList<Integer> tmp = new ArrayList<Integer>();
-				tmp.add(pointB);
-				edgeMap.put(pointA,tmp);
-			}
-			if(edgeMap.keySet().contains(pointB)){
-				edgeMap.get(pointB).add(pointA);
-			}
-			else {
-				ArrayList<Integer> tmp = new ArrayList<Integer>();
-				tmp.add(pointA);
-				edgeMap.put(pointB,tmp);
-			}
-		}
-
-		for(Integer i : edgeMap.keySet()){
-			System.out.println(i + " " + edgeMap.get(i));
-		}
-
-		/*for(String s : graphEdgesList){
-			System.out.println(s);
-		}*/
-
-		//Get the points from the input file
-		//The Below list is used to store the point information from the input file
-		points = new HashMap<Integer,Point>();
 
 		//Takes the filename as a parameter. File contains points and the x and y cooridnates.
 		String filename = args[0];
 
 		//BufferedReader used to read input from a file
-		BufferedReader reader = new BufferedReader(new FileReader(filename));
+		BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(filename), "UTF-16") );
+		String line = null;
+		
+		//initalize the points arraylist and the hash map that will contain the edges
+		points = new ArrayList<Integer>();
+		edgeMap = new HashMap<Integer,ArrayList<Integer>>();
+		while((line = reader.readLine()) != null){
+			//System.out.println(line);
+			String[] pointEdges = line.split("-");
+			Integer point = Integer.valueOf(pointEdges[0]);
+			points.add(point);
 
-		//pattern is the regular expression used to parse throught the input file and find the point number and the point's x and y value.
-		//The pattern will find all of the points in the file
-		String pattern = "(?m)^\\d+\\s\\d+\\.\\d+\\s\\d+\\.\\d+";
-		Pattern r = Pattern.compile(pattern);
-
-		String value = null;
-
-		//the below while loop with go through the file line by line and see if a match has been made with the regular expression.
-		//If a match is made, the line is parsed, retrieving the piont name, x and y coordinate values
-		//the points are saved in the points list.
-		//We will need the points later on to display the graph in the jframe
-		while((value = reader.readLine()) != null){
-			Matcher m = r.matcher(value);
-			if(m.find()) {
-				//add the point to the List of points
-				Point p = new Point(Integer.parseInt(value.split(" ")[0]), Double.parseDouble(value.split(" ")[1]), Double.parseDouble(value.split(" ")[2]));
-				points.put(p.name,p);
+			ArrayList<Integer> edges = new ArrayList<Integer>();
+			for(String i : pointEdges[1].split(",")){
+				edges.add(Integer.valueOf(i));
 			}
+			edgeMap.put(point,edges);
 		}
 
-		/*for(Integer p : points.keySet()){
-			System.out.println(points.get(p).name + " " + points.get(p).x + " " + points.get(p).y);	
-		}*/
+		for(Integer i : points){
+			System.out.println(i + " " + edgeMap.get(i));
+		}
 
 		//More concerned with the edges
 		//Create a gentic algoritm to generate random sets of edges, which is basically a subgraph
 		
 		//need to retrieve a random amount of edges
-		//int max = points.size(); //normally will be this 
-		int max = 6; //use this for initally testing
-		int min = 2;
+		int max = points.size(); //normally will be this 
+		int min = 1;
 		int numPoints = randomNum(min,max);
 		System.out.println("Number of points: " + numPoints);
 		Integer[] randPoints = new Integer[numPoints];
@@ -111,17 +69,11 @@ public class MaxClique {
 		}
 		System.out.println();
 
-		SubGraph initSubGraph = new SubGraph(points.keySet());
+		//SubGraph initSubGraph = new SubGraph(points.keySet());
 		//create the random subgraph
-		//SubGraph initSubGraph = new SubGraph(mySet);
-		// System.out.println(initSubGraph.points);
-		// System.out.println(initSubGraph.maxCliqueSize);
-		// System.out.println(initSubGraph.maxCliqueSize);
-		//System.out.println(initSubGraph.maxCliqueArray);
-
-		
-		//intersection(edgeMap.get(2),edgeMap.get(3));
-		// intersection(1,3);
+		SubGraph initSubGraph = new SubGraph(mySet);
+		System.out.println(initSubGraph.points);
+		System.out.println(initSubGraph.maxCliqueArray);
 
 	}
 
@@ -195,7 +147,6 @@ public class MaxClique {
 			}
 		}
 		return union;
-
 	}
 
 	public static ArrayList<Integer> setDifference(ArrayList<Integer> a, Integer b){
@@ -208,30 +159,21 @@ public class MaxClique {
 		return diffArray;
 	}
 
-	public static ArrayList<Integer> bronKerbosch(ArrayList<Integer> r, ArrayList<Integer> p, ArrayList<Integer> x){
+	public static ArrayList<Integer> bronKerbosch(ArrayList<Integer> r, ArrayList<Integer> p, ArrayList<Integer> x, ArrayList<Integer> maxCliqueArray){
 		/*System.out.println("r " + r);
 		System.out.println("p " + p);
 		System.out.println("x " + x);*/
 		
 		if(p.size() == 0 && x.size() == 0){
-			System.out.println("return " + r);
-			ArrayList<Integer> rFound = new ArrayList<Integer>();
-			rFound.addAll(r);
-			r.clear();
-			return rFound;
+			//System.out.println("return " + r);
+			if(r.size() >= maxCliqueArray.size()){
+				maxCliqueArray.clear();
+				maxCliqueArray.addAll(r);
+			}
 		}
 		else {
 			for(Integer v : p){
-				//r.add(v);
-				// p = intersection(p,edgeMap.get(v));
-				// x = intersection(x,edgeMap.get(v));
-				//System.out.println(r);
-				
-				bronKerbosch(union(r,v), intersection(p,edgeMap.get(v)), intersection(x,edgeMap.get(v)));
-				//p.clear();
-				//x.clear();
-				/*p = new ArrayList<Integer>();
-				x = new ArrayList<Integer>();*/
+				bronKerbosch(union(r,v), intersection(p,edgeMap.get(v)), intersection(x,edgeMap.get(v)), maxCliqueArray);
 				p = setDifference(p,v);
 				x = union(x,v);
 			}	
@@ -240,27 +182,6 @@ public class MaxClique {
 	}
 
 }
-
-//Object used to represent a single point
-//Point Stores the Name, X and Y Value
-//with methods to retrieve the name, x and y value
-//and a method to set the name.
-//Turns out there is a java class called point
-class Point {
-	int name;
-	double x, y;
-	//constructor
-	Point(int name, double x, double y) {
-		this.name = name;
-		this.x = x;
-		this.y = y;
-	}
-	//needed when converting a number to a letter and vise versa
-	void setName(int a) {
-		this.name = a;
-	}
-}
-
 //Create a object that will store the random edges
 //This object will calculate the clique of the subGraph
 class SubGraph {
@@ -303,29 +224,8 @@ class SubGraph {
 			ArrayList<Integer> tmpMaxArray = new ArrayList<Integer>();
 			ArrayList<Integer> a = new ArrayList<Integer>();
 			ArrayList<Integer> b = new ArrayList<Integer>();
-			maxCliqueArray = MaxClique.bronKerbosch(a, points, b );
-			/*for(int i = 0; i < points.size(); i++){
-								
-			}*/
+			MaxClique.bronKerbosch(a, points, b, maxCliqueArray );
+			Collections.sort(maxCliqueArray);
 		}
 	}
-
-
-	void search(Integer node, ArrayList<Integer> tmpMaxArray){
-		tmpMaxArray.add(node);
-		for(Integer i : MaxClique.edgeMap.get(node)){
-			//System.out.println(i);
-			if(!tmpMaxArray.contains(i)){
-				search(i, tmpMaxArray);
-				System.out.println("225 " + tmpMaxArray);
-			}
-		}
-	}
-
-	/*void addEdge(String edge){
-		edges.add(edge);
-	}
-	void removeEdge(String edge){
-		edges.remove(edge);
-	}*/
 }
