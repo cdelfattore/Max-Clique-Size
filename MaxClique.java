@@ -14,11 +14,6 @@ public class MaxClique {
 	public static HashMap<Integer,ArrayList<Integer>> edgeMap;
 
 	public static void main(String[] args) throws IOException {
-		//edges in the undirected graph
-		List<String> graphEdgesList = Arrays.asList("1-2","1-3","1-5","2-3","2-4","2-6","3-4","3-5","3-6","4-5","5-6","1-6","7-8","9-10");
-		//List<String> graphEdgesList = Arrays.asList("1-2","1-5","2-3","2-5","3-4","4-5","4-6");
-		//List<String> graphEdgesList = Arrays.asList("1-2","2-3","2-5","3-4","3-6","4-5","4-6","5-6");
-
 		//Takes the filename as a parameter. File contains points and the x and y cooridnates.
 		String filename = args[0];
 
@@ -42,42 +37,89 @@ public class MaxClique {
 			edgeMap.put(point,edges);
 		}
 
-		for(Integer i : points){
-			System.out.println(i + " " + edgeMap.get(i));
-		}
+		/*for(Integer i : points){
+			//System.out.println(i + " " + edgeMap.get(i));
+			System.out.println(i);
+		}*/
 
-		//More concerned with the edges
-		//Create a gentic algoritm to generate random sets of edges, which is basically a subgraph
+		/*SubGraph initSubGraph = new SubGraph(randomSet());
+		System.out.println(initSubGraph.points);
+		System.out.println(initSubGraph.maxCliqueArray);*/
 		
-		//need to retrieve a random amount of edges
+		//Genetic algorithm
+		//first create the inital population
+		int popSize = 12;
+		ArrayList<SubGraph> popArray = new ArrayList<SubGraph>();
+		for(int i = 0; i < popSize; i++){
+			SubGraph sub = new SubGraph(randomSet());
+			//System.out.print(sub.maxCliqueSize + " ");
+			popArray.add(sub);
+		}
+		System.out.println();
+		popArray = sortArraySubGraph(popArray);
+		
+		for(SubGraph s : popArray){
+			System.out.print(s.maxCliqueSize + " ");
+		}
+		System.out.println();
+
+	}
+
+	//sorting function that will simiulate the fitness function of a genetic algorithm
+	//Not any particualer sorting algorithm, its efficency is O(n^2), but stable.
+	public static ArrayList<SubGraph> sortArraySubGraph(ArrayList<SubGraph> subGraphArray){
+		ArrayList<SubGraph> retSubGraphArray = new ArrayList<SubGraph>();
+		for(SubGraph s : subGraphArray){
+			//System.out.println(s.maxCliqueArray.size());
+			if(retSubGraphArray.size() == 0){
+				retSubGraphArray.add(s);
+			}
+			else if(retSubGraphArray.size() == 1){
+				if(retSubGraphArray.get(0).maxCliqueSize > s.maxCliqueSize){
+					retSubGraphArray.add(s);
+				}
+				else {
+					retSubGraphArray.add(0,s);
+				}
+			}
+			else {
+				for(int i = 0; i < retSubGraphArray.size(); i++){
+					if( i == 0 && s.maxCliqueSize >= retSubGraphArray.get(i).maxCliqueSize ){
+						retSubGraphArray.add(0,s);
+					}
+					else if(i == retSubGraphArray.size()-1 && s.maxCliqueSize < retSubGraphArray.get(i).maxCliqueSize){
+						retSubGraphArray.add(retSubGraphArray.size(),s);
+					}
+					else if(s.maxCliqueSize < retSubGraphArray.get(i).maxCliqueSize && s.maxCliqueSize >= retSubGraphArray.get(i+1).maxCliqueSize){
+						retSubGraphArray.add(i+1,s);	
+					}
+				}
+			}
+			for(SubGraph b : retSubGraphArray){
+				System.out.print(b.maxCliqueSize + " ");
+			}
+			System.out.println();
+		}
+		return retSubGraphArray;
+	}
+
+	public static HashSet<Integer> randomSet(){
 		int max = points.size(); //normally will be this 
 		int min = 1;
 		int numPoints = randomNum(min,max);
-		System.out.println("Number of points: " + numPoints);
+		//System.out.println("Number of points: " + numPoints);
 		Integer[] randPoints = new Integer[numPoints];
 		//grab numEdges amount of points from points
 		for(int i = 0; i < numPoints; i++){
 			randPoints[i] = randomNum(min,max);
-			//System.out.println(randPoints[i]);
 		}
-		System.out.println();
-		System.out.println("Set of points");
+		//System.out.println();
+		//System.out.println("Set of points");
 		//convert the array to a set to remove duplicat values
-		Set<Integer> mySet = new HashSet<Integer>(Arrays.asList(randPoints));
-		for(Integer i : mySet){
-			System.out.println(i);
-		}
-		System.out.println();
-
-		//SubGraph initSubGraph = new SubGraph(points.keySet());
-		//create the random subgraph
-		SubGraph initSubGraph = new SubGraph(mySet);
-		System.out.println(initSubGraph.points);
-		System.out.println(initSubGraph.maxCliqueArray);
-
+		return new HashSet<Integer>(Arrays.asList(randPoints));
 	}
 
-	static int randomNum(int min, int max){
+	public static int randomNum(int min, int max){
 		return min + (int)(Math.random() * ((max - min) + 1));
 	}
 
@@ -127,10 +169,6 @@ public class MaxClique {
 				//System.out.println(j + " " + k);
 				if(j == k){
 					inter.add(k);
-					//System.out.println(inter);
-				}
-				else {
-					//inter.remove(k);
 				}
 			}
 		}
@@ -194,6 +232,7 @@ class SubGraph {
 		for(Integer i : ranEdges){
 			points.add(i);
 		}
+		CalcMaxClique();
 	}
 
 	SubGraph(Set<Integer> ranEdges){
@@ -226,6 +265,7 @@ class SubGraph {
 			ArrayList<Integer> b = new ArrayList<Integer>();
 			MaxClique.bronKerbosch(a, points, b, maxCliqueArray );
 			Collections.sort(maxCliqueArray);
+			maxCliqueSize = maxCliqueArray.size();
 		}
 	}
 }
