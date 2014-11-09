@@ -51,7 +51,7 @@ public class MaxClique {
 		
 		//Genetic algorithm
 		//first create the inital population
-		int popSize = 24;
+		int popSize = 12;
 		ArrayList<SubGraph> popArray = new ArrayList<SubGraph>();
 		for(int i = 0; i < popSize; i++){
 			SubGraph sub = new SubGraph();
@@ -65,7 +65,7 @@ public class MaxClique {
 			System.out.println(s.maxCliqueSize + " " + s.points);
 		}
 		System.out.println();
-		int generations = 10;
+		int generations = 200;
 		int innerLoopIterations = popArray.size() / 2;
 		for(int i = 0; i < generations; i++){
 			for(int j = 0; j < innerLoopIterations; j++){
@@ -73,15 +73,29 @@ public class MaxClique {
 				ArrayList<Integer> child = createChildPath(popArray.get(j).maxCliqueArray, popArray.get(j+1).maxCliqueArray);
 				popArray.add(new SubGraph(child));
 				popArray = sortArraySubGraph(popArray,popSize);
-
-				
-
 			}
-			System.out.println("popArray");
-			for(SubGraph s : popArray){
-				System.out.println(s.maxCliqueSize + " " + s.points);
+		}
+
+		System.out.println("popArray");
+		for(SubGraph s : popArray){
+			System.out.println(s.maxCliqueSize + " " + s.maxCliqueArray);
+		}
+		System.out.println();
+
+		//start wisdom of crowd logic is run once per iteration
+		Integer[] mostCommonPoints = new Integer[points.size()+1];
+		for(SubGraph s : popArray){
+			for(int i = 0; i < s.maxCliqueArray.size(); i++){
+				if(mostCommonPoints[s.maxCliqueArray.get(i)] == null){
+					mostCommonPoints[s.maxCliqueArray.get(i)] = 0;
+				}
+				mostCommonPoints[s.maxCliqueArray.get(i)] += 1;
 			}
-			System.out.println();
+		}
+		for(int i = 1;i<mostCommonPoints.length;i++){
+			if(mostCommonPoints[i] != null && mostCommonPoints[i] > 0){
+				System.out.println(i + " " + mostCommonPoints[i]);	
+			}			
 		}
 	}
 
@@ -152,7 +166,7 @@ public class MaxClique {
 		}
 		if(retSubGraphArray.size() >= popSize){
 			ArrayList<SubGraph> subList = new ArrayList<SubGraph>();
-			subList.addAll(retSubGraphArray.subList(0,23));
+			subList.addAll(retSubGraphArray.subList(0,popSize-1));
 			return subList;
 		}
 		else {
@@ -163,7 +177,7 @@ public class MaxClique {
 	public static HashSet<Integer> randomSet(){
 		int max = points.size(); //normally will be this 
 		int min = 1;
-		int numPoints = randomNum(min,max);
+		int numPoints = randomNum(min,(int)(max * 0.5));
 		//System.out.println("Number of points: " + numPoints);
 		Integer[] randPoints = new Integer[numPoints];
 		//grab numEdges amount of points from points
@@ -304,6 +318,7 @@ class SubGraph {
 	SubGraph(){
 		points = new ArrayList<Integer>(MaxClique.randomSet());
 		CalcMaxClique();
+		mutate();		
 	}
 
 	//function to calculate the maximum clique of a subgraph
@@ -330,5 +345,25 @@ class SubGraph {
 			Collections.sort(maxCliqueArray);
 			maxCliqueSize = maxCliqueArray.size();
 		}
+	}
+	//method used to mutate the subgraph.
+	//swap out one or more values with another
+	void mutate(){
+		int ranMutate = MaxClique.randomNum(1,(int)(MaxClique.points.size() * 0.3));
+		int i = 0;
+		while(i < ranMutate){
+		//for(int i = 0; i < ranMutate;i++){
+			Integer tmp = MaxClique.randomNum(1,MaxClique.points.size());
+			if(!points.contains(tmp)){
+				//points.remove(i);
+				points.add(tmp);
+				i++;
+			}
+			//System.out.println(tmp);
+		}
+		maxCliqueArray = new ArrayList<Integer>();
+		CalcMaxClique();
+		//System.out.println(ranMutate);
+
 	}
 }
