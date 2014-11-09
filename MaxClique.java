@@ -51,7 +51,7 @@ public class MaxClique {
 		
 		//Genetic algorithm
 		//first create the inital population
-		int popSize = 12;
+		int popSize = 16;
 		ArrayList<SubGraph> popArray = new ArrayList<SubGraph>();
 		for(int i = 0; i < popSize; i++){
 			SubGraph sub = new SubGraph();
@@ -65,15 +65,18 @@ public class MaxClique {
 			System.out.println(s.maxCliqueSize + " " + s.points);
 		}
 		System.out.println();
-		int generations = 200;
-		int innerLoopIterations = popArray.size() / 2;
+		int generations = 20;
+		int innerLoopIterations = popArray.size() / 4;
 		for(int i = 0; i < generations; i++){
-			for(int j = 0; j < innerLoopIterations; j++){
+			for(int j = 0; j < innerLoopIterations; j = j + 2){
 				//take the first two subGraphs and combine them, then the next two for the first half of popsize
 				ArrayList<Integer> child = createChildPath(popArray.get(j).maxCliqueArray, popArray.get(j+1).maxCliqueArray);
 				popArray.add(new SubGraph(child));
 				popArray = sortArraySubGraph(popArray,popSize);
 			}
+
+			
+			
 		}
 
 		System.out.println("popArray");
@@ -83,8 +86,11 @@ public class MaxClique {
 		System.out.println();
 
 		//start wisdom of crowd logic is run once per iteration
+		//tale only the top 25% of subgraphs to form the logic for wisdom of the crowd's
 		Integer[] mostCommonPoints = new Integer[points.size()+1];
-		for(SubGraph s : popArray){
+		//for(SubGraph s : popArray){
+		for(int j = 0; j < popArray.size(); j++){
+			SubGraph s = popArray.get(j);
 			for(int i = 0; i < s.maxCliqueArray.size(); i++){
 				if(mostCommonPoints[s.maxCliqueArray.get(i)] == null){
 					mostCommonPoints[s.maxCliqueArray.get(i)] = 0;
@@ -92,11 +98,41 @@ public class MaxClique {
 				mostCommonPoints[s.maxCliqueArray.get(i)] += 1;
 			}
 		}
+		HashMap<Integer,Integer> nodeOccurMap = new HashMap<Integer,Integer>();
+		int mostOccurance = 0;
 		for(int i = 1;i<mostCommonPoints.length;i++){
 			if(mostCommonPoints[i] != null && mostCommonPoints[i] > 0){
-				System.out.println(i + " " + mostCommonPoints[i]);	
+				nodeOccurMap.put(i,mostCommonPoints[i]);
+				if(mostOccurance < mostCommonPoints[i]){
+					mostOccurance = mostCommonPoints[i];
+				}
+				//System.out.println(i + " " + mostCommonPoints[i]);	
 			}			
 		}
+		//System.out.println(mostOccurance);
+		ArrayList<Integer> wocArray = new ArrayList<Integer>();
+
+		//take some number of the most common points and add create a subgraph with them
+		//take all of the nodes that occur mostOccurance time plus some number of nodes
+		int extraOccurances = 0;
+		while(wocArray.size() < popArray.get(0).maxCliqueSize){
+			for(Integer i : nodeOccurMap.keySet()){
+				//System.out.println(i + " " + nodeOccurMap.get(i));
+				if(nodeOccurMap.get(i) == mostOccurance - extraOccurances ){
+					wocArray.add(i);
+				}
+			}
+			mostOccurance--;	
+		}
+		
+		/*for(Integer i : wocArray){
+			//System.out.print(i + " ");
+		}*/
+
+		SubGraph wocSub = new SubGraph(wocArray);
+		System.out.println(wocSub.maxCliqueArray);
+		System.out.println("Max clique size: " + wocSub.maxCliqueSize);
+
 	}
 
 	//create a child path
@@ -175,7 +211,10 @@ public class MaxClique {
 	}
 
 	public static HashSet<Integer> randomSet(){
-		int max = points.size(); //normally will be this 
+		int max = (int)(points.size() * 0.20);
+		if(max > 30){
+			max = 30;
+		}
 		int min = 1;
 		int numPoints = randomNum(min,(int)(max * 0.5));
 		//System.out.println("Number of points: " + numPoints);
@@ -304,6 +343,7 @@ class SubGraph {
 			points.add(i);
 		}
 		CalcMaxClique();
+		mutate();
 	}
 
 	SubGraph(Set<Integer> ranEdges){
@@ -312,7 +352,8 @@ class SubGraph {
 		for(Integer i : ranEdges){
 			points.add(i);
 		}
-		CalcMaxClique();	
+		CalcMaxClique();
+		mutate();	
 	}
 
 	SubGraph(){
@@ -350,6 +391,9 @@ class SubGraph {
 	//swap out one or more values with another
 	void mutate(){
 		int ranMutate = MaxClique.randomNum(1,(int)(MaxClique.points.size() * 0.3));
+		if(ranMutate > 15){
+			ranMutate = 15;
+		}
 		int i = 0;
 		while(i < ranMutate){
 		//for(int i = 0; i < ranMutate;i++){
