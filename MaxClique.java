@@ -65,24 +65,26 @@ public class MaxClique {
 			System.out.println(s.maxCliqueSize + " " + s.points);
 		}
 		System.out.println();
-		int generations = 10;
+		int generations = 100;
 		int innerLoopIterations = popArray.size() / 4;
 		for(int i = 0; i < generations; i++){
 			for(int j = 0; j < innerLoopIterations; j = j + 2){
 				//take the first two subGraphs and combine them, then the next two for the first half of popsize
 				ArrayList<Integer> child = createChildPath(popArray.get(j).maxCliqueArray, popArray.get(j+1).maxCliqueArray);
-				popArray.add(new SubGraph(child));
+				SubGraph g = new SubGraph(child);
+				//add logic to see if the g's clique is already in the array
+				popArray.add(g);
 				popArray = sortArraySubGraph(popArray,popSize);
 			}
 
 			System.out.println("popArray");
 			for(SubGraph s : popArray){
-				System.out.println(s.maxCliqueSize + " " + s.maxCliqueArray);
+				System.out.println("Generation : " + i + " Max clique size: " + s.maxCliqueSize + " " + s.maxCliqueArray);
 			}
 			System.out.println();			
 
-			}
-
+		}
+			System.out.println("end array");
 			//start wisdom of crowd logic is run once per iteration
 			//tale only the top 25% of subgraphs to form the logic for wisdom of the crowd's
 			Integer[] mostCommonPoints = new Integer[points.size()+1];
@@ -214,10 +216,10 @@ public class MaxClique {
 
 	public static HashSet<Integer> randomSet(){
 		int max = (int)(points.size() * 0.20);
-		if(max > 50){
+		/*if(max > 50){
 			max = 50;
-		}
-		int min = 1;
+		}*/
+		int min = 2;
 		int numPoints = randomNum(min,(int)(max * 0.5));
 		//System.out.println("Number of points: " + numPoints);
 		Integer[] randPoints = new Integer[numPoints];
@@ -387,6 +389,8 @@ class SubGraph {
 			MaxClique.bronKerbosch(a, points, b, maxCliqueArray );
 			Collections.sort(maxCliqueArray);
 			maxCliqueSize = maxCliqueArray.size();
+			points.clear();
+			points = maxCliqueArray;
 		}
 	}
 	//method used to mutate the subgraph.
