@@ -7,11 +7,14 @@
 import java.io.*;
 import java.util.*;
 import java.util.regex.*;
+import javax.swing.*;
+import java.awt.*;
 
 public class MaxClique {
 	//public static Map<Integer,Point> points; //map of points
 	public static ArrayList<Integer> points; //map of points
 	public static HashMap<Integer,ArrayList<Integer>> edgeMap;
+	public static SubGraph wocSub;
 
 	public static void main(String[] args) throws IOException {
 		//Takes the filename as a parameter. File contains points and the x and y cooridnates.
@@ -65,16 +68,26 @@ public class MaxClique {
 			System.out.println(s.maxCliqueSize + " " + s.points);
 		}
 		System.out.println();
-		int generations = 100;
+		int generations = 30;
 		int innerLoopIterations = popArray.size() / 4;
 		for(int i = 0; i < generations; i++){
 			for(int j = 0; j < innerLoopIterations; j = j + 2){
 				//take the first two subGraphs and combine them, then the next two for the first half of popsize
 				ArrayList<Integer> child = createChildPath(popArray.get(j).maxCliqueArray, popArray.get(j+1).maxCliqueArray);
 				SubGraph g = new SubGraph(child);
-				//add logic to see if the g's clique is already in the array
-				popArray.add(g);
-				popArray = sortArraySubGraph(popArray,popSize);
+
+				//logic to see if the g's clique is already in the array
+				Boolean add = true;
+				for(SubGraph sub : popArray){
+					//System.out.println(sub.maxCliqueString.equals(g.maxCliqueString));
+					if(sub.maxCliqueString.equals(g.maxCliqueString)){
+						add = false;
+					}
+				}
+				if(add){
+					popArray.add(g);
+					popArray = sortArraySubGraph(popArray,popSize);
+				}
 			}
 
 			System.out.println("popArray");
@@ -114,7 +127,8 @@ public class MaxClique {
 
 			//take some number of the most common points and add create a subgraph with them
 			//take all of the nodes that occur mostOccurance time plus some number of nodes
-			int extraOccurances = randomNum(1,10);
+			//needs to be adjusted
+			int extraOccurances = randomNum(10,15);
 			while(wocArray.size() < popArray.get(0).maxCliqueSize + extraOccurances){
 				for(Integer k : nodeOccurMap.keySet()){
 					//System.out.println(i + " " + nodeOccurMap.get(i));
@@ -128,15 +142,69 @@ public class MaxClique {
 			/*for(Integer i : wocArray){
 				//System.out.print(i + " ");
 			}*/
-			System.out.println("Wisdom of crowd's array");
-			SubGraph wocSub = new SubGraph(wocArray);
-			wocSub.mutate();
+			System.out.println("The Maximum Clique");
+			wocSub = new SubGraph(wocArray);
+			//wocSub.mutate();
 			System.out.println(wocSub.maxCliqueArray);
 			System.out.println("Max clique size: " + wocSub.maxCliqueSize);
 
 			popArray.add(wocSub);
 			popArray = sortArraySubGraph(popArray,popSize);
 
+			//Draw the wisdom of the crowds clique in a jframe
+			JFrame frame = new JFrame();
+			frame.setSize(600,600);
+			frame.setLocationRelativeTo(null);
+			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			frame.setTitle("Maximum Clique of a " + points.size() + " node graph");
+			
+			//add the custom JPanel that will display the points and edges.
+			frame.add(new MyPanel());
+			frame.setVisible(true);
+
+	}
+
+	public static class MyPanel extends JPanel{
+		public void paint(Graphics g) {
+			Graphics2D g2 = (Graphics2D)g;
+			HashMap<Integer,Point> drawPoints = new HashMap<Integer,Point>();
+			//first draw all of the points in a jframe
+			int scale = 4;
+			for(Integer i : points){
+				Point tmpPoint = new Point(i);
+				//System.out.println(tmpPoint.x + " " + tmpPoint.y);
+				//
+				if(wocSub.maxCliqueArray.contains(i)){
+					g2.setColor(Color.blue);
+					g2.fillOval((int)tmpPoint.x * scale, (int)tmpPoint.y * scale, 5, 5);
+				}
+				else {
+					g2.drawOval((int)tmpPoint.x * scale, (int)tmpPoint.y * scale, 5, 5);	
+				}
+				
+				drawPoints.put(i,tmpPoint);
+			}
+
+			ArrayList<String> drawn = new ArrayList<String>();
+			for(int i = 0; i < wocSub.maxCliqueArray.size(); i++){
+				for(int j = 0; j < wocSub.maxCliqueArray.size(); j++){
+					String s = "";
+					if( wocSub.maxCliqueArray.get(i).intValue() < wocSub.maxCliqueArray.get(j).intValue()){
+						s = wocSub.maxCliqueArray.get(i) + "-" + wocSub.maxCliqueArray.get(j);	
+					}
+					else {
+						s = wocSub.maxCliqueArray.get(j) + "-" + wocSub.maxCliqueArray.get(i);
+					}					
+					if(wocSub.maxCliqueArray.get(i).intValue() != wocSub.maxCliqueArray.get(j).intValue() && !drawn.contains(s)){
+						drawn.add(s);
+						//System.out.println(wocSub.maxCliqueArray.get(i) + "-" + wocSub.maxCliqueArray.get(j));
+						g2.setColor(Color.blue);
+						g2.drawLine((int)drawPoints.get(wocSub.maxCliqueArray.get(i)).x * scale, (int)drawPoints.get(wocSub.maxCliqueArray.get(i)).y * scale, (int)drawPoints.get(wocSub.maxCliqueArray.get(j)).x * scale,(int)drawPoints.get(wocSub.maxCliqueArray.get(j)).y * scale);
+						
+					}
+				}
+			}
+		}	
 	}
 
 	//create a child path
@@ -334,20 +402,39 @@ public class MaxClique {
 	}
 
 }
+//Simple point class used when drawing iframe
+class Point{
+	int x, y;
+	Integer point;
+
+	Point(Integer p){
+		x = MaxClique.randomNum(0, 100);
+		y = MaxClique.randomNum(0, 100);
+		point = p;
+	}
+}
+
 //Create a object that will store the random edges
 //This object will calculate the clique of the subGraph
 class SubGraph {
 	ArrayList<Integer> points;
 	int maxCliqueSize;
 	ArrayList<Integer> maxCliqueArray;
+	String maxCliqueString;
 
 	SubGraph(ArrayList<Integer> ranEdges){
 		points = new ArrayList<Integer>();
 		for(Integer i : ranEdges){
 			points.add(i);
 		}
-		CalcMaxClique();
-		mutate();
+		int mut = MaxClique.randomNum(1,10);
+		if(mut < 5){
+			mutate();
+		}
+		else {
+			CalcMaxClique();
+		}
+		MaxCliqueString();
 	}
 
 	SubGraph(Set<Integer> ranEdges){
@@ -356,14 +443,27 @@ class SubGraph {
 		for(Integer i : ranEdges){
 			points.add(i);
 		}
-		CalcMaxClique();
-		mutate();	
+		int mut = MaxClique.randomNum(1,10);
+		if(mut < 5){
+			mutate();
+		}
+		else {
+			CalcMaxClique();
+		}
+		MaxCliqueString();
 	}
 
 	SubGraph(){
 		points = new ArrayList<Integer>(MaxClique.randomSet());
-		CalcMaxClique();
-		mutate();		
+		//
+		int mut = MaxClique.randomNum(1,10);
+		if(mut < 5){
+			mutate();
+		}
+		else {
+			CalcMaxClique();
+		}
+		MaxCliqueString();				
 	}
 
 	//function to calculate the maximum clique of a subgraph
@@ -396,7 +496,7 @@ class SubGraph {
 	//method used to mutate the subgraph.
 	//swap out one or more values with another
 	void mutate(){
-		int ranMutate = MaxClique.randomNum(4,(int)(MaxClique.points.size() * 0.2));
+		int ranMutate = MaxClique.randomNum(1,(int)(MaxClique.points.size() * 0.2));
 		/*if(ranMutate > 20){
 			ranMutate = 20;
 		}*/
@@ -405,7 +505,6 @@ class SubGraph {
 		//for(int i = 0; i < ranMutate;i++){
 			Integer tmp = MaxClique.randomNum(1,MaxClique.points.size());
 			if(!points.contains(tmp)){
-				//points.remove(0);
 				points.add(tmp);
 				i++;
 			}
@@ -414,6 +513,18 @@ class SubGraph {
 		maxCliqueArray = new ArrayList<Integer>();
 		CalcMaxClique();
 		//System.out.println(ranMutate);
+	}
 
+	void MaxCliqueString() {
+		maxCliqueString = "";
+		for(int i = 0; i < maxCliqueArray.size(); i++){
+			if(i + 1 == maxCliqueArray.size()){
+				maxCliqueString += maxCliqueArray.get(i);
+			}
+			else {
+				maxCliqueString += maxCliqueArray.get(i) + "-";
+			}
+		}
+		System.out.println(maxCliqueString);
 	}
 }
