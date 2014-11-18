@@ -1,7 +1,13 @@
 /*	Project 6 - Genetic Alogorithm and Wisdom of the crowd's approach for solving maximum clique size
 	Name: Chris Del Fattore
 	Email: crdelf01@louisville.edu
-	Description:
+	Description: A genetic algorithm with wisdom of the crowd's logic.
+	To run the program compile this File (MaxClique.java)
+	
+	The run it like so: java MaxClique Random6NodeGraph.txt
+	
+	Any of the supplied input txt files can be used, or you can generate your own using the
+	GenerateGraphs.java
 
 */
 import java.io.*;
@@ -11,10 +17,9 @@ import javax.swing.*;
 import java.awt.*;
 
 public class MaxClique {
-	//public static Map<Integer,Point> points; //map of points
-	public static ArrayList<Integer> points; //map of points
-	public static HashMap<Integer,ArrayList<Integer>> edgeMap;
-	public static SubGraph wocSub;
+	public static ArrayList<Integer> points; //array list of points in the super graph
+	public static HashMap<Integer,ArrayList<Integer>> edgeMap; // a map of the eges in the graph.
+	public static SubGraph wocSub; // the final wisdom of the paths graph
 
 	public static void main(String[] args) throws IOException {
 		//Takes the filename as a parameter. File contains points and the x and y cooridnates.
@@ -27,6 +32,7 @@ public class MaxClique {
 		//initalize the points arraylist and the hash map that will contain the edges
 		points = new ArrayList<Integer>();
 		edgeMap = new HashMap<Integer,ArrayList<Integer>>();
+		//read the nodes and edges from the input file
 		while((line = reader.readLine()) != null){
 			//System.out.println(line);
 			String[] pointEdges = line.split("-");
@@ -39,6 +45,8 @@ public class MaxClique {
 			}
 			edgeMap.put(point,edges);
 		}
+		//Print to verify the output
+		//Used for testing, keep commented out unless debugging
 
 		/*for(Integer i : points){
 			//System.out.println(i + " " + edgeMap.get(i));
@@ -54,29 +62,34 @@ public class MaxClique {
 		
 		//Genetic algorithm
 		//first create the inital population
-		int popSize = 16;
+		int popSize = 8;
 		ArrayList<SubGraph> popArray = new ArrayList<SubGraph>();
 		for(int i = 0; i < popSize; i++){
 			SubGraph sub = new SubGraph();
 			popArray.add(sub);
 		}
-		//System.out.println();
+
+		//Sort the population so the subgraphs with the biggest maximum cliques are at the beginning of the subgraph.
 		popArray = sortArraySubGraph(popArray,popSize);
 		
-		System.out.println("Init Pop Array");
+		System.out.println("Inital Population Array");
 		for(SubGraph s : popArray){
 			System.out.println(s.maxCliqueSize + " " + s.points);
 		}
 		System.out.println();
-		int generations = 30;
-		int innerLoopIterations = popArray.size() / 4;
+
+		//number of generations for the genetic algorithm
+		int generations = 40;
+		//determines the pairs that will create child paths with
+		int innerLoopIterations = popArray.size() / 2;
 		for(int i = 0; i < generations; i++){
-			for(int j = 0; j < innerLoopIterations; j = j + 2){
+			for(int j = 0; j < innerLoopIterations; j++){
 				//take the first two subGraphs and combine them, then the next two for the first half of popsize
 				ArrayList<Integer> child = createChildPath(popArray.get(j).maxCliqueArray, popArray.get(j+1).maxCliqueArray);
 				SubGraph g = new SubGraph(child);
 
 				//logic to see if the g's clique is already in the array
+				//subgraph is not added if the points in the subgraph are already in the graph
 				Boolean add = true;
 				for(SubGraph sub : popArray){
 					//System.out.println(sub.maxCliqueString.equals(g.maxCliqueString));
@@ -97,11 +110,11 @@ public class MaxClique {
 			System.out.println();			
 
 		}
-			System.out.println("end array");
+
 			//start wisdom of crowd logic is run once per iteration
 			//tale only the top 25% of subgraphs to form the logic for wisdom of the crowd's
+			//array used to keep track of the amount of times a point appears in a subgraph.
 			Integer[] mostCommonPoints = new Integer[points.size()+1];
-			//for(SubGraph s : popArray){
 			for(int j = 0; j < popArray.size(); j++){
 				SubGraph s = popArray.get(j);
 				for(int k = 0; k < s.maxCliqueArray.size(); k++){
@@ -111,6 +124,9 @@ public class MaxClique {
 					mostCommonPoints[s.maxCliqueArray.get(k)] += 1;
 				}
 			}
+			
+			//key is the node number the value is the amount of times the node appears in
+			//a subgraph.
 			HashMap<Integer,Integer> nodeOccurMap = new HashMap<Integer,Integer>();
 			int mostOccurance = 0;
 			for(int k = 1;k<mostCommonPoints.length;k++){
@@ -128,7 +144,12 @@ public class MaxClique {
 			//take some number of the most common points and add create a subgraph with them
 			//take all of the nodes that occur mostOccurance time plus some number of nodes
 			//needs to be adjusted
-			int extraOccurances = randomNum(10,15);
+			int extraOccurances = randomNum(1,points.size());
+			if(extraOccurances > 30){
+				extraOccurances = 30;
+			}
+			//add the most common points to an arraylist. this arraylist will be used to 
+			//create the wisdom of the crowd's subgraph with.
 			while(wocArray.size() < popArray.get(0).maxCliqueSize + extraOccurances){
 				for(Integer k : nodeOccurMap.keySet()){
 					//System.out.println(i + " " + nodeOccurMap.get(i));
@@ -142,7 +163,8 @@ public class MaxClique {
 			/*for(Integer i : wocArray){
 				//System.out.print(i + " ");
 			}*/
-			System.out.println("The Maximum Clique");
+			//Create the wisdom of the crowd's subgraph and print it's length.
+			System.out.println("The Wisdom of the Crowd's Maximum Clique");
 			wocSub = new SubGraph(wocArray);
 			//wocSub.mutate();
 			System.out.println(wocSub.maxCliqueArray);
@@ -153,7 +175,7 @@ public class MaxClique {
 
 			//Draw the wisdom of the crowds clique in a jframe
 			JFrame frame = new JFrame();
-			frame.setSize(600,600);
+			frame.setSize(500,500);
 			frame.setLocationRelativeTo(null);
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setTitle("Maximum Clique of a " + points.size() + " node graph");
@@ -316,7 +338,7 @@ public class MaxClique {
 			if(j != a && j != b){
 				for(Integer h : edgeMap.get(b)){
 					if(j == h){
-						System.out.println("Is " + j + " = " + h);
+						//System.out.println("Is " + j + " = " + h);
 						inter.add(j);
 					}
 				}
@@ -525,6 +547,6 @@ class SubGraph {
 				maxCliqueString += maxCliqueArray.get(i) + "-";
 			}
 		}
-		System.out.println(maxCliqueString);
+		//System.out.println(maxCliqueString);
 	}
 }
